@@ -6,6 +6,7 @@ export interface Assessment {
   summary: string;
   riskLevel: 'Low' | 'Moderate' | 'High';
   recommendations: string[];
+  apiResponse?: any; // Full API response with predictions and specialist recommendations
 }
 
 export enum AppView {

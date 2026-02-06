@@ -1,17 +1,32 @@
-
 type ApiPrediction = {
   disease: string;
   confidence: number;
+};
+
+type SpecialistRecommendation = {
+  disease: string;
+  specialist: string;
+  description: string;
+  confidence: number;
+};
+
+type FeatureImportance = {
+  symptom: string;
+  importance: number;
+  contribution: 'High' | 'Medium' | 'Low';
 };
 
 type ApiResponse = {
   disease: string;
   confidence: number;
   top_predictions: ApiPrediction[];
+  specialist_recommendations: SpecialistRecommendation[];
   matched_symptoms: string[];
   unmatched_symptoms: string[];
   days: number;
   region: string;
+  important_features: FeatureImportance[];
+  explanation: string;
 };
 
 const getRiskLevel = (confidence: number) => {
@@ -21,7 +36,7 @@ const getRiskLevel = (confidence: number) => {
 };
 
 export const analyzeSymptoms = async (symptoms: string, days: number, region: string) => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  const baseUrl = (import.meta.env as any).VITE_API_BASE_URL || 'http://localhost:8000';
   
   console.log('Analyzing symptoms:', { symptoms, days, region, baseUrl });
   
@@ -69,7 +84,8 @@ export const analyzeSymptoms = async (symptoms: string, days: number, region: st
     return {
       summary: `Likely condition: ${result.disease} (${(result.confidence * 100).toFixed(1)}%)`,
       riskLevel,
-      recommendations
+      recommendations,
+      apiResponse: result  // Return full API response for detailed display
     };
   } catch (error) {
     console.error('Error in analyzeSymptoms:', error);
