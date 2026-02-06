@@ -28,12 +28,12 @@ const App: React.FC = () => {
 
   const handleStartAssessment = () => setCurrentView(AppView.ASSESSMENT_FORM);
 
-  const handleSubmitAssessment = async (symptoms: string) => {
+  const handleSubmitAssessment = async (symptoms: string, days: number, region: string) => {
     setIsLoading(true);
     setCurrentView(AppView.ANALYZING);
     
     try {
-      const analysis = await analyzeSymptoms(symptoms);
+      const analysis = await analyzeSymptoms(symptoms, days, region);
       const newAssessment: Assessment = {
         id: Date.now().toString(),
         date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
