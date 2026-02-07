@@ -293,6 +293,7 @@ const App: React.FC = () => {
               days={currentResult.apiResponse.days}
               region={currentResult.apiResponse.region}
               date={currentResult.date}
+              patientInfo={currentResult.apiResponse.patient_info}
               xaiData={currentResult.apiResponse.xai_data}
               analysisType={currentResult.apiResponse.analysis_type}
               differentialDiagnosis={currentResult.apiResponse.differential_diagnosis}

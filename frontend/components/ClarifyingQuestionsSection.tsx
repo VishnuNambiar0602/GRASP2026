@@ -305,11 +305,11 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
         }
 
         .card-content {
-          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
           border-radius: 12px;
           padding: 24px;
           color: white;
-          box-shadow: 0 8px 24px rgba(245, 87, 108, 0.2);
+          box-shadow: 0 8px 32px rgba(8, 145, 178, 0.25);
         }
 
         .section-header {
@@ -328,16 +328,17 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
         .section-header h3 {
           margin: 0;
           font-size: 20px;
-          font-weight: 600;
+          font-weight: 700;
+          letter-spacing: 0.5px;
         }
 
         .toggle-btn {
           background: rgba(255, 255, 255, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.4);
           color: white;
           width: 32px;
           height: 32px;
-          border-radius: 6px;
+          border-radius: 8px;
           font-size: 20px;
           font-weight: 600;
           cursor: pointer;
@@ -346,53 +347,60 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
 
         .toggle-btn:hover {
           background: rgba(255, 255, 255, 0.3);
+          border-color: rgba(255, 255, 255, 0.6);
+          transform: scale(1.05);
         }
 
         .section-subtitle {
           margin: 0 0 16px 0;
           font-size: 14px;
-          opacity: 0.9;
+          opacity: 0.95;
+          font-weight: 500;
         }
 
         .progress-bar {
-          height: 6px;
+          height: 7px;
           background: rgba(255, 255, 255, 0.2);
-          border-radius: 3px;
+          border-radius: 4px;
           overflow: hidden;
           position: relative;
         }
 
         .progress-fill {
           height: 100%;
-          background: linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0.7));
-          border-radius: 3px;
-          transition: width 0.4s ease;
+          background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+          border-radius: 4px;
+          transition: width 0.5s ease;
+          box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
         }
 
         .progress-text {
           position: absolute;
-          right: 8px;
+          right: 10px;
           top: 50%;
           transform: translateY(-50%);
           font-size: 11px;
-          font-weight: 600;
-          opacity: 0.8;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.9);
+          letter-spacing: 0.5px;
         }
 
         .message-box {
-          background: rgba(255, 255, 255, 0.15);
-          border-left: 4px solid rgba(255, 255, 255, 0.4);
+          background: rgba(255, 255, 255, 0.12);
+          border-left: 4px solid #fbbf24;
           padding: 16px;
           border-radius: 8px;
           margin-bottom: 24px;
           display: flex;
           gap: 12px;
           backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .message-icon {
-          font-size: 20px;
+          font-size: 24px;
           flex-shrink: 0;
+          line-height: 1;
         }
 
         .message-content {
@@ -403,6 +411,7 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
           margin: 0 0 8px 0;
           font-size: 13px;
           line-height: 1.5;
+          font-weight: 500;
         }
 
         .message-content p:last-child {
@@ -410,7 +419,8 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
         }
 
         .alternatives-text {
-          opacity: 0.85;
+          opacity: 0.9;
+          font-size: 12px;
         }
 
         .questions-container {
@@ -442,9 +452,10 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
         }
 
         .question-badge {
-          background: rgba(255, 255, 255, 0.3);
-          width: 28px;
-          height: 28px;
+          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+          color: #1a1a1a;
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -452,6 +463,7 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
           font-weight: 700;
           font-size: 14px;
           flex-shrink: 0;
+          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
         }
 
         .question-header h5 {
@@ -471,11 +483,11 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
 
         .text-input-field {
           width: 100%;
-          padding: 12px;
+          padding: 12px 14px;
           margin-left: 40px;
           border: 2px solid rgba(255, 255, 255, 0.3);
-          border-radius: 6px;
-          background: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.12);
           color: white;
           font-size: 13px;
           font-family: inherit;
@@ -489,9 +501,9 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
 
         .text-input-field:focus {
           outline: none;
-          background: rgba(255, 255, 255, 0.15);
-          border-color: rgba(255, 255, 255, 0.6);
-          box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.18);
+          border-color: rgba(251, 191, 36, 0.8);
+          box-shadow: 0 0 12px rgba(251, 191, 36, 0.3);
         }
 
         .text-input-field:disabled {
@@ -675,24 +687,25 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
 
         .submit-btn {
           width: 100%;
-          padding: 12px;
-          background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-          color: white;
+          padding: 14px 16px;
+          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+          color: #1a1a1a;
           border: none;
-          border-radius: 6px;
+          border-radius: 8px;
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 700;
           cursor: pointer;
           transition: all 0.3s ease;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
+          letter-spacing: 0.5px;
         }
 
         .submit-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 20px rgba(251, 191, 36, 0.4);
         }
 
         .submit-btn:disabled {
@@ -701,18 +714,19 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
         }
 
         .badge {
-          background: rgba(255, 255, 255, 0.3);
-          padding: 2px 8px;
-          border-radius: 10px;
+          background: rgba(26, 26, 26, 0.3);
+          padding: 2px 10px;
+          border-radius: 12px;
           font-size: 12px;
+          font-weight: 600;
         }
 
         .spinner {
           display: inline-block;
-          width: 12px;
-          height: 12px;
-          border: 2px solid rgba(255, 255, 255, 0.3);
-          border-top-color: white;
+          width: 14px;
+          height: 14px;
+          border: 2.5px solid rgba(26, 26, 26, 0.2);
+          border-top-color: #1a1a1a;
           border-radius: 50%;
           animation: spin 0.6s linear infinite;
         }
@@ -723,11 +737,13 @@ export const ClarifyingQuestionsSection: React.FC<ClarifyingQuestionsSectionProp
 
         .next-step-info {
           margin-top: 12px;
-          padding: 12px;
+          padding: 12px 14px;
           background: rgba(255, 255, 255, 0.1);
-          border-radius: 6px;
+          border-radius: 8px;
+          border-left: 3px solid #fbbf24;
           font-size: 12px;
           line-height: 1.5;
+          font-weight: 500;
         }
 
         @media (max-width: 768px) {

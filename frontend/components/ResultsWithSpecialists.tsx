@@ -87,29 +87,22 @@ interface XAIData {
 interface PatientInfo {
   patient_id?: string;
   name?: string;
-  age?: number;
+  age?: string | number;
   gender?: string;
   blood_type?: string;
   contact?: string;
   email?: string;
-  allergies?: string[];
+  allergies?: string | string[];
   current_medications?: string[];
   medical_history?: string[];
+  // Health assessment form fields
+  last_meal_time?: string;
+  last_meal_type?: string;
+  water_intake?: string;
+  weight?: string;
+  past_conditions?: string;
 }
 
-
-interface PatientInfo {
-  patient_id?: string;
-  name?: string;
-  age?: number;
-  gender?: string;
-  blood_type?: string;
-  contact?: string;
-  email?: string;
-  allergies?: string[];
-  current_medications?: string[];
-  medical_history?: string[];
-}
 
 // Re-export types from prediction service for component use
 type DifferentialDiagnosis = {
@@ -404,11 +397,11 @@ const ResultsWithSpecialists: React.FC<ResultsWithSpecialistsProps> = ({
                 <p style={{ color: '#0f172a', fontWeight: '600', margin: '0' }}>{patientInfo.contact || 'N/A'}</p>
               </div>
 
-              {patientInfo.allergies && patientInfo.allergies.length > 0 && (
+              {patientInfo.allergies && (typeof patientInfo.allergies === 'string' ? patientInfo.allergies.length > 0 : patientInfo.allergies.length > 0) && (
                 <div style={{ gridColumn: '1 / -1' }}>
                   <p style={{ color: '#666', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>⚠️ Allergies</p>
                   <p style={{ color: '#dc2626', fontWeight: '600', margin: '0', fontSize: '8pt' }}>
-                    {patientInfo.allergies.join(', ')}
+                    {typeof patientInfo.allergies === 'string' ? patientInfo.allergies : patientInfo.allergies.join(', ')}
                   </p>
                 </div>
               )}
@@ -433,7 +426,7 @@ const ResultsWithSpecialists: React.FC<ResultsWithSpecialistsProps> = ({
         )}
 
         {/* Lifestyle & Health Information Section */}
-        {((xaiData as any)?.patient_info || (specialistRecommendations as any)?._patient_info) && (
+        {patientInfo && (
           <div style={{
             marginBottom: '10mm',
             backgroundColor: '#fffbeb',
@@ -457,59 +450,48 @@ const ResultsWithSpecialists: React.FC<ResultsWithSpecialistsProps> = ({
               gap: '8mm',
               fontSize: '8.5pt'
             }}>
-              {(() => {
-                const info = (xaiData as any)?.patient_info || {};
-                return (
-                  <>
-                    {info.last_meal_time && (
-                      <div>
-                        <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Last Meal Time</p>
-                        <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{info.last_meal_time}</p>
-                      </div>
-                    )}
-                    {info.last_meal_type && (
-                      <div>
-                        <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Meal Type</p>
-                        <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{info.last_meal_type}</p>
-                      </div>
-                    )}
-                    {info.water_intake && (
-                      <div>
-                        <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Water Intake</p>
-                        <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{info.water_intake}</p>
-                      </div>
-                    )}
-                    {info.age && (
-                      <div>
-                        <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Age</p>
-                        <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{info.age} years</p>
-                      </div>
-                    )}
-                    {info.weight && (
-                      <div>
-                        <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Weight</p>
-                        <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{info.weight} kg</p>
-                      </div>
-                    )}
-                    {(info.past_conditions || info.allergies) && (
-                      <div style={{ gridColumn: '1 / -1' }}>
-                        {info.past_conditions && (
-                          <div style={{ marginBottom: '4mm' }}>
-                            <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Past Medical Conditions</p>
-                            <p style={{ color: '#0f172a', fontWeight: '500', margin: '0', fontSize: '8pt' }}>{info.past_conditions}</p>
-                          </div>
-                        )}
-                        {info.allergies && (
-                          <div>
-                            <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>⚠️ Allergies</p>
-                            <p style={{ color: '#dc2626', fontWeight: '600', margin: '0', fontSize: '8pt' }}>{info.allergies}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
+              {patientInfo.last_meal_time && (
+                <div>
+                  <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Last Meal Time</p>
+                  <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{patientInfo.last_meal_time}</p>
+                </div>
+              )}
+              {patientInfo.last_meal_type && (
+                <div>
+                  <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Meal Type</p>
+                  <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{patientInfo.last_meal_type}</p>
+                </div>
+              )}
+              {patientInfo.water_intake && (
+                <div>
+                  <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Water Intake</p>
+                  <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{patientInfo.water_intake}</p>
+                </div>
+              )}
+              {patientInfo.age && (
+                <div>
+                  <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Age</p>
+                  <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{patientInfo.age} years</p>
+                </div>
+              )}
+              {patientInfo.weight && (
+                <div>
+                  <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Weight</p>
+                  <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{patientInfo.weight} kg</p>
+                </div>
+              )}
+              {patientInfo.past_conditions && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Past Medical Conditions</p>
+                  <p style={{ color: '#0f172a', fontWeight: '500', margin: '0', fontSize: '8pt' }}>{patientInfo.past_conditions}</p>
+                </div>
+              )}
+              {patientInfo.allergies && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>⚠️ Allergies</p>
+                  <p style={{ color: '#dc2626', fontWeight: '600', margin: '0', fontSize: '8pt' }}>{typeof patientInfo.allergies === 'string' ? patientInfo.allergies : patientInfo.allergies?.join(', ')}</p>
+                </div>
+              )}
             </div>
           </div>
         )}
