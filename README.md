@@ -1,256 +1,237 @@
-# GRASP2026 - Git Branch Management Guide
+# KruuGRASP 2026 - Disease Diagnosis & XAI System
 
-This guide will walk you through creating branches, making changes, pushing to specific branches, and creating pull requests.
+A modern disease diagnosis system with explainable AI (XAI) that provides patients with accurate diagnoses, differential alternatives, and clarifying questions for better health assessment.
 
-## Table of Contents
-- [Creating a New Branch](#creating-a-new-branch)
-- [Switching Between Branches](#switching-between-branches)
-- [Making Changes and Committing](#making-changes-and-committing)
-- [Pushing Changes to a Specific Branch](#pushing-changes-to-a-specific-branch)
-- [Creating a Pull Request (PR)](#creating-a-pull-request-pr)
-- [Best Practices](#best-practices)
+## Features
+
+### 🏥 Core Diagnosis
+- **Intelligent Disease Recognition**: TF-IDF + symptom overlap analysis (60%/40% weighted)
+- **16 Diseases**: Comprehensive medical knowledge base covering common and complex conditions
+- **Confidence-Based Assessment**: Triggers clarifying questions when diagnosis confidence is below 50%
+
+### 🤔 Explainable AI (XAI)
+- **Differential Diagnosis**: Shows similar diseases with score comparisons and distinguishing symptoms
+- **Symptom Breakdown**: Plain-language explanation of which symptoms matched
+- **Clinical Guidance**: Expert recommendations for each diagnosis
+- **Confidence Scores**: Clear visibility into diagnosis reliability
+
+### 🎯 User Experience
+- **Clarifying Questions**: (4 types) Symptom confirmation, severity assessment, timeline, differential guidance
+- **Patient Assessment History**: Track previous assessments per patient
+- **PDF Reports**: Generate and download diagnosis reports
+- **Specialist Recommendations**: Suggested medical specialists based on diagnosis
+
+## Tech Stack
+
+### Frontend
+- **React 19** - UI framework
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS** - Styling
+- **Vite v6.2.0** - Build tool & dev server
+- **html2pdf.js** - PDF generation
+
+### Backend
+- **Python 3.8+** - Core language
+- **Flask 2.3.2** - REST API server
+- **Scikit-learn 1.3.0** - TF-IDF vectorization
+- **Transformers 4.33.0** - ML models
+- **PyTorch 2.0+** - Deep learning
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- Python 3.8+
+- pip (Python package manager)
+
+### Installation
+
+#### Backend Setup
+```bash
+cd Medical-XAI/backend
+pip install -r requirements.txt
+python app.py
+```
+Backend runs on `http://localhost:5000`
+
+#### Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Frontend runs on `http://localhost:3001`
+
+## Project Structure
+
+```
+KruuGRASP2026/
+├── README.md                          # This file
+├── Medical-XAI/
+│   ├── backend/
+│   │   ├── app.py                     # Flask REST API server
+│   │   ├── model.py                   # Disease diagnosis model
+│   │   ├── xai_formatter.py           # Explainability functions
+│   │   └── requirements.txt           # Python dependencies
+│   └── data/
+│       └── medical_knowledge_base.json # Disease & symptom data
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx                    # Root React component
+│   │   ├── types.ts                   # TypeScript types
+│   │   ├── components/
+│   │   │   ├── AssessmentForm.tsx     # Patient symptom input
+│   │   │   ├── AssessmentHistory.tsx  # Past assessments
+│   │   │   ├── ResultsWithSpecialists.tsx  # Diagnosis results
+│   │   │   ├── DifferentialDiagnosisSection.tsx  # Alternative diseases
+│   │   │   ├── ClarifyingQuestionsSection.tsx    # Follow-up questions
+│   │   │   ├── PatientRegistration.tsx # Patient signup
+│   │   │   ├── PatientSelection.tsx   # Select existing patient
+│   │   │   ├── SymptomSelector.tsx    # Symptom picker
+│   │   │   ├── Header.tsx             # Navigation header
+│   │   │   ├── SuccessView.tsx        # Success screen
+│   │   │   └── XAIExplanation.tsx     # AI explanation modal
+│   │   ├── services/
+│   │   │   ├── gemini.ts              # Gemini AI integration
+│   │   │   └── prediction.ts          # API service & types
+│   │   ├── index.tsx                  # React entry point
+│   │   └── metadata.json              # Disease definitions
+│   ├── index.html                     # HTML template
+│   ├── package.json                   # Node dependencies
+│   ├── tsconfig.json                  # TypeScript config
+│   ├── vite.config.ts                 # Vite build config
+│   └── README.md                      # Frontend-specific docs
+```
+
+## How It Works
+
+### Diagnosis Flow
+1. **Patient Registration** → Creates/selects patient profile
+2. **Symptom Input** → Patient selects symptoms from curated list
+3. **Disease Matching** → Backend analyzes symptoms using TF-IDF + overlap algorithm
+4. **Confidence Check** → If score < 50%, triggers clarifying questions
+5. **Results Display** → Shows diagnosis with confidence, differential options, and specialists
+6. **PDF Export** → User can download diagnosis report
+
+### XAI Explanation Components
+
+**1. Differential Diagnosis**
+- Shows top 2-3 alternative diseases within 5% of primary diagnosis
+- Lists distinguishing symptoms to help rule out alternatives
+- Includes clinical guidance for each option
+
+**2. Clarifying Questions** (4 Types)
+- **Symptom Confirmation**: "Do you definitely have X symptom?"
+- **Severity Scale**: "On a scale of 1-10, how severe is X?"
+- **Timeline**: "When did symptoms start?"
+- **Differential Questions**: "Do you have symptoms specific to disease Y?"
+
+**3. Confidence Metrics**
+- TF-IDF Similarity Score (60% weight)
+- Symptom Overlap Percentage (40% weight)
+- Combined Confidence Score (0-100%)
+
+## API Endpoints
+
+### POST `/diagnose`
+Analyzes symptoms and returns diagnosis with XAI features.
+
+**Request:**
+```json
+{
+  "symptoms": ["fever", "cough", "headache"],
+  "patient_id": "pat_123"
+}
+```
+
+**Response:**
+```json
+{
+  "primary_disease": "Common Cold",
+  "confidence_score": 87.5,
+  "matching_symptoms": ["fever", "cough"],
+  "explanation": "TF-IDF score: 75%, Symptom overlap: 100%",
+  "differential_diagnosis": [
+    {
+      "disease": "Flu",
+      "score": 82.1,
+      "distinguishing_symptoms": ["body aches", "fatigue"],
+      "guidance": "Flu symptoms typically include..."
+    }
+  ],
+  "confidence_check": {
+    "meets_threshold": true,
+    "clarifying_questions": [ /* ... */ ]
+  },
+  "specialists": ["General Practitioner", "Internal Medicine"]
+}
+```
+
+### GET `/health`
+Health check endpoint.
+
+## Configuration
+
+### Scoring Weights
+- TF-IDF Component: **60%**
+- Symptom Overlap: **40%**
+- Confidence Threshold: **50%** (below this triggers clarifying questions)
+- Differential Range: **5%** (shows alternatives within 5% of primary score)
+
+### Knowledge Base
+Disease definitions are in [Medical-XAI/data/medical_knowledge_base.json](Medical-XAI/data/medical_knowledge_base.json). Each entry includes:
+- Symptom profiles
+- ICD-10 codes
+- Recommended specialists
+- Clinical descriptions
+
+## Development
+
+### Frontend Development
+```bash
+cd frontend
+npm run dev           # Start dev server with HMR
+npm run build         # Production build
+npm run preview       # Preview production build
+```
+
+### Backend Development
+```bash
+cd Medical-XAI/backend
+python app.py         # Development server (debug mode)
+```
+
+## Troubleshooting
+
+**White Screen Error on Re-analyze**
+- Check backend is running on port 5000
+- Verify API endpoint: `http://localhost:5000/diagnose`
+- Check browser console for error messages
+
+**TypeScript Errors**
+- Run `npm run build` to verify compilation
+- Check all imports in `services/prediction.ts`
+
+**Disease Not Found**
+- Verify symptoms in knowledge base
+- Check `medical_knowledge_base.json` is loaded
+- Ensure symptom names match database exactly
+
+## Performance Optimizations
+
+- **Frontend**: Vite minification + tree-shaking for production builds
+- **Backend**: TF-IDF vectorizer caching for faster inference
+- **Database**: JSON-based knowledge base for instant access (no I/O delays)
+
+## License
+
+This project is part of KruuGRASP 2026 initiative.
+
+## Support
+
+For issues or questions, check the Medical-XAI backend logs or browser console for detailed error messages.
 
 ---
 
-## Creating a New Branch
-
-### Method 1: Create and Switch to New Branch
-```bash
-git checkout -b branch-name
-```
-
-### Method 2: Create Branch Without Switching
-```bash
-git branch branch-name
-```
-
-### Example:
-```bash
-git checkout -b feature/new-feature
-```
-
----
-
-## Switching Between Branches
-
-### Switch to an Existing Branch
-```bash
-git checkout branch-name
-```
-
-### Switch to Main/Master Branch
-```bash
-git checkout main
-# or
-git checkout master
-```
-
-### Example:
-```bash
-git checkout feature/new-feature
-```
-
----
-
-## Making Changes and Committing
-
-### 1. Check Status of Your Changes
-```bash
-git status
-```
-
-### 2. Add Files to Staging Area
-
-**Add a specific file:**
-```bash
-git add filename.txt
-```
-
-**Add all changed files:**
-```bash
-git add .
-```
-
-### 3. Commit Your Changes
-```bash
-git commit -m "Your descriptive commit message"
-```
-
-### Example Workflow:
-```bash
-# Make changes to your files
-git status                           # Check what files changed
-git add .                           # Stage all changes
-git commit -m "Add new feature"     # Commit with message
-```
-
----
-
-## Pushing Changes to a Specific Branch
-
-### Push to the Same Branch (First Time)
-When pushing a new branch for the first time:
-```bash
-git push -u origin branch-name
-```
-
-### Push to the Same Branch (Subsequent Pushes)
-After the first push, you can simply use:
-```bash
-git push
-```
-
-### Push to a Different Remote Branch
-```bash
-git push origin local-branch-name:remote-branch-name
-```
-
-### Examples:
-```bash
-# First time pushing a new branch
-git push -u origin feature/new-feature
-
-# Subsequent pushes
-git push
-
-# Push local branch to different remote branch
-git push origin feature/new-feature:feature/updated-feature
-```
-
----
-
-## Creating a Pull Request (PR)
-
-### Step 1: Push Your Branch to GitHub
-```bash
-git push -u origin your-branch-name
-```
-
-### Step 2: Create PR on GitHub
-
-**Option A: Via GitHub Web Interface**
-1. Go to your repository on GitHub
-2. Click on "Pull requests" tab
-3. Click "New pull request"
-4. Select the **base branch** (usually `main` or `master`)
-5. Select the **compare branch** (your feature branch)
-6. Click "Create pull request"
-7. Add a title and description
-8. Click "Create pull request"
-
-**Option B: Using GitHub CLI**
-```bash
-# Install GitHub CLI first (gh)
-gh pr create --base main --head your-branch-name --title "PR Title" --body "PR Description"
-```
-
-### Step 3: After Creating PR
-- Request reviewers
-- Add labels if needed
-- Wait for approval
-- Merge the PR once approved
-
----
-
-## Best Practices
-
-### Branch Naming Conventions
-```
-feature/description    # For new features
-bugfix/description     # For bug fixes
-hotfix/description     # For urgent fixes
-docs/description       # For documentation
-refactor/description   # For code refactoring
-```
-
-### Commit Message Best Practices
-- Use present tense: "Add feature" not "Added feature"
-- Be descriptive but concise
-- Reference issue numbers when applicable: "Fix login bug #123"
-
-### Example Workflow:
-```bash
-# 1. Create and switch to new branch
-git checkout -b feature/user-authentication
-
-# 2. Make changes to your files
-# ... edit files ...
-
-# 3. Stage and commit changes
-git add .
-git commit -m "Add user authentication system"
-
-# 4. Push to GitHub
-git push -u origin feature/user-authentication
-
-# 5. Create PR on GitHub (via web interface or CLI)
-gh pr create --base main --head feature/user-authentication
-
-# 6. After PR is approved, merge it on GitHub
-```
-
-### Keeping Your Branch Updated
-```bash
-# Switch to main branch
-git checkout main
-
-# Pull latest changes
-git pull origin main
-
-# Switch back to your branch
-git checkout your-branch-name
-
-# Merge main into your branch
-git merge main
-```
-
----
-
-## Quick Reference Commands
-
-```bash
-# Create new branch
-git checkout -b branch-name
-
-# Switch branches
-git checkout branch-name
-
-# Check current branch
-git branch
-
-# Stage changes
-git add .
-
-# Commit changes
-git commit -m "message"
-
-# Push to remote
-git push -u origin branch-name
-
-# Pull latest changes
-git pull origin branch-name
-
-# View all branches
-git branch -a
-
-# Delete local branch
-git branch -d branch-name
-
-# Delete remote branch
-git push origin --delete branch-name
-```
-
----
-
-## Need Help?
-
-If you encounter any issues:
-1. Check `git status` to see current state
-2. Use `git log` to view commit history
-3. Use `git branch` to see all branches
-4. Consult [Git Documentation](https://git-scm.com/doc)
-
----
-
-**Happy Coding! 🚀**"# KruuGRASP2026" 
-"# KruuGRASP2026" 
+**Last Updated**: 2026  
+**Status**: Production-Ready

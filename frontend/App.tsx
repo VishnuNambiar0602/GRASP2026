@@ -13,6 +13,112 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<Assessment[]>([]);
   const [currentResult, setCurrentResult] = useState<Partial<Assessment> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleClarifyingAnswersSubmit = async (answers: Record<string, any>) => {
+    if (!currentResult?.symptoms || !currentResult?.apiResponse) {
+      setErrorMessage('No current result found');
+      return;
+    }
+    
+    setErrorMessage(null);
+    setIsLoading(true);
+    try {
+      // Use original symptoms, not just matched ones
+      const originalSymptoms = currentResult.symptoms;
+      const days = currentResult.apiResponse.days || 3;
+      const region = currentResult.apiResponse.region || 'Pan-India';
+      
+      console.log('Submitting patient information:', answers);
+      
+      // The answers object now contains patient info fields directly
+      const response = await fetch('http://localhost:5000/diagnose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symptoms: originalSymptoms,
+          days: days,
+          patient_info: answers  // Send patient info as structured data
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Server error: ${response.status}`);
+      }
+
+      const rawResult = await response.json();
+      console.log('Response from backend:', rawResult);
+      
+      if (!rawResult || !rawResult.diseases || rawResult.diseases.length === 0) {
+        throw new Error('Server returned invalid response');
+      }
+
+      // Format the backend response the same way analyzeSymptoms does
+      const topDisease = rawResult.diseases[0];
+      
+      const getSpecialist = (diseaseName: string): string => {
+        const specialistMap: { [key: string]: string } = {
+          'pneumonia': 'Pulmonologist',
+          'covid': 'Infectious Disease Specialist',
+          'covid-19': 'Infectious Disease Specialist',
+          'influenza': 'General Practitioner',
+          'flu': 'General Practitioner',
+          'asthma': 'Pulmonologist',
+          'high blood pressure': 'Cardiologist',
+          'hypertension': 'Cardiologist'
+        };
+        const lower = diseaseName.toLowerCase();
+        for (const [key, specialist] of Object.entries(specialistMap)) {
+          if (lower.includes(key)) return specialist;
+        }
+        return 'General Practitioner';
+      };
+
+      const formattedApiResponse = {
+        disease: topDisease.name,
+        confidence: topDisease.confidence / 100,
+        top_predictions: rawResult.diseases.slice(0, 5).map((d: any) => ({
+          disease: d.name,
+          confidence: d.confidence / 100
+        })),
+        specialist_recommendations: rawResult.diseases.slice(0, 5).map((d: any) => ({
+          disease: d.name,
+          specialist: getSpecialist(d.name),
+          description: d.explanation || 'Consult the recommended specialist for proper diagnosis and treatment.',
+          confidence: d.confidence / 100
+        })),
+        matched_symptoms: topDisease.matched_symptoms,
+        unmatched_symptoms: topDisease.all_symptoms.filter((s: string) => !topDisease.matched_symptoms.includes(s)),
+        days: days,
+        region: region,
+        important_features: topDisease.xai?.feature_importance || [],
+        explanation: topDisease.explanation,
+        duration_warning: topDisease.duration_warning,
+        xai_data: topDisease.xai,
+        all_diseases: rawResult.diseases,
+        analysis_type: rawResult.analysis_type,
+        differential_diagnosis: rawResult.differential_diagnosis,
+        confidence_check: rawResult.confidence_check,
+        patient_info: answers  // Store patient info in API response
+      };
+
+      // Update the result with properly formatted response
+      setCurrentResult({
+        ...currentResult,
+        apiResponse: formattedApiResponse
+      });
+      
+      console.log('Patient information submitted successfully');
+    } catch (error) {
+      console.error('Error submitting patient information:', error);
+      const message = error instanceof Error ? error.message : 'Failed to submit. Please try again.';
+      setErrorMessage(message);
+      // Keep user on the result view so they can see the error and try again
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Load history from localStorage on initial render
   useEffect(() => {
@@ -52,6 +158,8 @@ const App: React.FC = () => {
       setHistory(updatedHistory);
       localStorage.setItem('assessment_history', JSON.stringify(updatedHistory));
       
+      console.log('New assessment object before setting result:', newAssessment);
+
       setCurrentResult(newAssessment);
       setCurrentView(AppView.RESULT);
     } catch (error) {
@@ -60,7 +168,7 @@ const App: React.FC = () => {
       
       if (error instanceof Error) {
         if (error.message.includes('Failed to fetch')) {
-          message = 'Cannot connect to the analysis server. Make sure the API is running on port 8000.';
+          message = 'Cannot connect to the analysis server. Make sure the API is running on port 5000.';
         } else if (error.message.includes('No symptoms recognized')) {
           message = 'None of the symptoms you entered were recognized. Please try different symptoms.';
         } else {
@@ -161,7 +269,19 @@ const App: React.FC = () => {
         )}
 
         {currentView === AppView.RESULT && currentResult && currentResult.apiResponse && (
-          <div className="animate-in fade-in slide-in-from-bottom-8 duration-500">
+          <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 w-full">
+            {errorMessage && (
+              <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <p className="font-semibold">Error</p>
+                <p>{errorMessage}</p>
+                <button 
+                  onClick={() => setErrorMessage(null)}
+                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
             <ResultsWithSpecialists
               disease={currentResult.apiResponse.disease}
               confidence={currentResult.apiResponse.confidence}
@@ -173,6 +293,13 @@ const App: React.FC = () => {
               days={currentResult.apiResponse.days}
               region={currentResult.apiResponse.region}
               date={currentResult.date}
+              xaiData={currentResult.apiResponse.xai_data}
+              analysisType={currentResult.apiResponse.analysis_type}
+              differentialDiagnosis={currentResult.apiResponse.differential_diagnosis}
+              confidenceCheck={currentResult.apiResponse.confidence_check}
+              durationWarning={currentResult.apiResponse.duration_warning}
+              onSubmitClarifyingAnswers={handleClarifyingAnswersSubmit}
+              isLoadingClarifyingAnswers={isLoading}
               onClose={() => setCurrentView(AppView.DASHBOARD)}
             />
           </div>

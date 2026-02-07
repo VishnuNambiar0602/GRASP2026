@@ -21,7 +21,7 @@ const getRiskLevel = (confidence: number) => {
 };
 
 export const analyzeSymptoms = async (symptoms: string, days: number, region: string) => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
   
   console.log('Analyzing symptoms:', { symptoms, days, region, baseUrl });
   

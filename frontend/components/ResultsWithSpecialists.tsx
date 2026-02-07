@@ -1,5 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import html2pdf from 'html2pdf.js';
+import { DifferentialDiagnosisSection } from './DifferentialDiagnosisSection';
+import { ClarifyingQuestionsSection } from './ClarifyingQuestionsSection';
 
 interface SpecialistRecommendation {
   disease: string;
@@ -12,6 +14,74 @@ interface FeatureImportance {
   symptom: string;
   importance: number;
   contribution: 'High' | 'Medium' | 'Low';
+  explanation?: string;
+}
+
+interface XAIScoringBreakdown {
+  tfidf_component: number;
+  tfidf_weight: number;
+  match_component: number;
+  match_weight: number;
+  final_score: number;
+  tfidf_details: {
+    tfidf_similarity: number;
+    matched_symptoms_count: number;
+    total_disease_symptoms: number;
+    match_bonus: number;
+    unmatched_disease_symptoms: string[];
+  };
+  match_ratio: number;
+  matched_count: number;
+  unmatched_disease_symptoms: string[];
+}
+
+interface XAIExplanation {
+  title: string;
+  main_reason: string;
+  scoring_components: {
+    text_similarity: {
+      label: string;
+      score: number;
+      explanation: string;
+      weight: string;
+    };
+    symptom_match: {
+      label: string;
+      score: number;
+      explanation: string;
+      weight: string;
+    };
+  };
+  matched_symptoms: string[];
+  unmatched_disease_symptoms: string[];
+  overall_confidence: number;
+  confidence_level: string;
+  summary: string;
+}
+
+interface SymptomAnalysis {
+  reported_and_match: {
+    count: number;
+    symptoms: string[];
+    description: string;
+  };
+  disease_expects_but_not_reported: {
+    count: number;
+    symptoms: string[];
+    more_count: number;
+    description: string;
+  };
+  coverage: {
+    percentage: number;
+    text: string;
+  };
+}
+
+interface XAIData {
+  scoring_breakdown: XAIScoringBreakdown;
+  explanation: XAIExplanation;
+  symptom_analysis: SymptomAnalysis;
+  feature_importance: FeatureImportance[];
 }
 
 interface PatientInfo {
@@ -27,6 +97,53 @@ interface PatientInfo {
   medical_history?: string[];
 }
 
+
+interface PatientInfo {
+  patient_id?: string;
+  name?: string;
+  age?: number;
+  gender?: string;
+  blood_type?: string;
+  contact?: string;
+  email?: string;
+  allergies?: string[];
+  current_medications?: string[];
+  medical_history?: string[];
+}
+
+// Re-export types from prediction service for component use
+type DifferentialDiagnosis = {
+  is_differential: boolean;
+  diseases_compared?: string[];
+  score_1?: number;
+  score_2?: number;
+  score_difference?: number;
+  explanation?: string;
+  shared_symptoms?: string[];
+  distinguishing_for_top?: string[];
+  distinguishing_for_alternative?: string[];
+  clarification_symptoms?: string[];
+  clarification_explanation?: string;
+}
+
+type ClarifyingQuestion = {
+  type: 'symptom_confirmation' | 'severity' | 'timeline' | 'differential';
+  question: string;
+  symptoms?: string[];
+  explanation?: string;
+}
+
+type ConfidenceCheck = {
+  needs_clarification: boolean;
+  reason?: string;
+  confidence?: number;
+  message?: string;
+  primary_candidate?: { disease: string; confidence: number };
+  alternatives?: Array<{ disease?: string; name?: string; confidence: number }>;
+  clarifying_questions?: ClarifyingQuestion[];
+  next_step?: string;
+}
+
 interface ResultsWithSpecialistsProps {
   disease: string;
   confidence: number;
@@ -39,6 +156,13 @@ interface ResultsWithSpecialistsProps {
   region: string;
   date?: string;
   patientInfo?: PatientInfo | null;
+  xaiData?: XAIData | null;
+  analysisType?: 'standard' | 'clarification_needed';
+  differentialDiagnosis?: DifferentialDiagnosis | null;
+  confidenceCheck?: ConfidenceCheck | null;
+  durationWarning?: string | null;
+  isLoadingClarifyingAnswers?: boolean;
+  onSubmitClarifyingAnswers?: (answers: Record<string, any>) => void;
   onClose?: () => void;
 }
 
@@ -54,6 +178,13 @@ const ResultsWithSpecialists: React.FC<ResultsWithSpecialistsProps> = ({
   region,
   date,
   patientInfo,
+  xaiData,
+  analysisType,
+  differentialDiagnosis,
+  confidenceCheck,
+  durationWarning,
+  isLoadingClarifyingAnswers = false,
+  onSubmitClarifyingAnswers,
   onClose
 }) => {
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -301,6 +432,88 @@ const ResultsWithSpecialists: React.FC<ResultsWithSpecialistsProps> = ({
           </div>
         )}
 
+        {/* Lifestyle & Health Information Section */}
+        {((xaiData as any)?.patient_info || (specialistRecommendations as any)?._patient_info) && (
+          <div style={{
+            marginBottom: '10mm',
+            backgroundColor: '#fffbeb',
+            padding: '8mm',
+            borderRadius: '3px',
+            border: '1px solid #fbbf24'
+          }}>
+            <h3 style={{
+              fontSize: '9pt',
+              fontWeight: '700',
+              color: '#d97706',
+              margin: '0 0 5mm 0',
+              textTransform: 'uppercase',
+              letterSpacing: '0.8px'
+            }}>
+              🏥 Lifestyle & Health Information
+            </h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '8mm',
+              fontSize: '8.5pt'
+            }}>
+              {(() => {
+                const info = (xaiData as any)?.patient_info || {};
+                return (
+                  <>
+                    {info.last_meal_time && (
+                      <div>
+                        <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Last Meal Time</p>
+                        <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{info.last_meal_time}</p>
+                      </div>
+                    )}
+                    {info.last_meal_type && (
+                      <div>
+                        <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Meal Type</p>
+                        <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{info.last_meal_type}</p>
+                      </div>
+                    )}
+                    {info.water_intake && (
+                      <div>
+                        <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Water Intake</p>
+                        <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{info.water_intake}</p>
+                      </div>
+                    )}
+                    {info.age && (
+                      <div>
+                        <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Age</p>
+                        <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{info.age} years</p>
+                      </div>
+                    )}
+                    {info.weight && (
+                      <div>
+                        <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Weight</p>
+                        <p style={{ color: '#0f172a', fontWeight: '500', margin: '0' }}>{info.weight} kg</p>
+                      </div>
+                    )}
+                    {(info.past_conditions || info.allergies) && (
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        {info.past_conditions && (
+                          <div style={{ marginBottom: '4mm' }}>
+                            <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>Past Medical Conditions</p>
+                            <p style={{ color: '#0f172a', fontWeight: '500', margin: '0', fontSize: '8pt' }}>{info.past_conditions}</p>
+                          </div>
+                        )}
+                        {info.allergies && (
+                          <div>
+                            <p style={{ color: '#92400e', fontSize: '7.5pt', margin: '0 0 1mm 0', fontWeight: '600' }}>⚠️ Allergies</p>
+                            <p style={{ color: '#dc2626', fontWeight: '600', margin: '0', fontSize: '8pt' }}>{info.allergies}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
         {/* AI Analysis Section */}
         <div style={{
           marginBottom: '8mm',
@@ -329,6 +542,122 @@ const ResultsWithSpecialists: React.FC<ResultsWithSpecialistsProps> = ({
             {explanation}
           </p>
         </div>
+
+        {/* XAI Scoring Breakdown Section - SIMPLIFIED */}
+        {xaiData?.explanation && (
+          <div style={{
+            marginBottom: '8mm',
+            backgroundColor: '#f0f9fa',
+            padding: '10mm',
+            border: '2px solid #0891b2',
+            borderRadius: '3px'
+          }}>
+            <h2 style={{
+              fontSize: '10pt',
+              fontWeight: '700',
+              color: '#0891b2',
+              margin: '0 0 5mm 0',
+              textTransform: 'uppercase',
+              letterSpacing: '0.8px'
+            }}>
+              🔍 How We Arrived at This Diagnosis
+            </h2>
+            
+            <div style={{
+              marginBottom: '5mm',
+              backgroundColor: '#ffffff',
+              padding: '8mm',
+              borderRadius: '3px',
+              border: '1px solid #ddd'
+            }}>
+              <p style={{
+                margin: '0',
+                fontSize: '9pt',
+                lineHeight: '1.6',
+                color: '#404040'
+              }}>
+                <strong>What We Found:</strong><br/>
+                {xaiData.explanation.main_reason}
+              </p>
+            </div>
+
+            {/* Simple Match Explanation */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '6mm',
+              marginBottom: '5mm'
+            }}>
+              {/* Symptom Match */}
+              <div style={{
+                backgroundColor: '#ffffff',
+                padding: '8mm',
+                borderRadius: '3px',
+                border: '1px solid #ddd'
+              }}>
+                <p style={{
+                  margin: '0 0 4mm 0',
+                  fontSize: '9pt',
+                  fontWeight: '600',
+                  color: '#0891b2'
+                }}>
+                  Your Symptoms
+                </p>
+                <p style={{
+                  margin: '0',
+                  fontSize: '8.5pt',
+                  lineHeight: '1.5',
+                  color: '#404040'
+                }}>
+                  {xaiData.symptom_analysis.reported_and_match.count} of your symptoms match what we typically see with this condition. This is a strong indicator.
+                </p>
+              </div>
+
+              {/* Coverage Explanation */}
+              <div style={{
+                backgroundColor: '#ffffff',
+                padding: '8mm',
+                borderRadius: '3px',
+                border: '1px solid #ddd'
+              }}>
+                <p style={{
+                  margin: '0 0 4mm 0',
+                  fontSize: '9pt',
+                  fontWeight: '600',
+                  color: '#0891b2'
+                }}>
+                  Symptom Completeness
+                </p>
+                <p style={{
+                  margin: '0',
+                  fontSize: '8.5pt',
+                  lineHeight: '1.5',
+                  color: '#404040'
+                }}>
+                  {xaiData.symptom_analysis.coverage.percentage.toFixed(0)}% of common symptoms for this condition are present. The more symptoms match, the more confident we are in the diagnosis.
+                </p>
+              </div>
+            </div>
+
+            {/* Simple Summary */}
+            <div style={{
+              backgroundColor: '#ecf8f9',
+              padding: '8mm',
+              borderRadius: '3px',
+              border: '1px solid #0891b2'
+            }}>
+              <p style={{
+                margin: '0',
+                fontSize: '8.5pt',
+                lineHeight: '1.6',
+                color: '#0f172a',
+                fontStyle: 'italic'
+              }}>
+                <strong>In Plain Language:</strong> The AI examined your symptoms and found they closely match {disease}. The match is based on your reported symptoms and typical presentation patterns for this condition.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Symptoms and Key Indicators Row */}
         <div style={{
@@ -395,8 +724,16 @@ const ResultsWithSpecialists: React.FC<ResultsWithSpecialistsProps> = ({
                 textTransform: 'uppercase',
                 letterSpacing: '0.8px'
               }}>
-                📈 Top Impact Symptoms
+                ⭐ Most Important Symptoms for This Diagnosis
               </h3>
+              <p style={{
+                margin: '0 0 4mm 0',
+                fontSize: '8pt',
+                color: '#666',
+                lineHeight: '1.5'
+              }}>
+                These symptoms were the strongest indicators of {disease}. <strong>High impact</strong> means this symptom heavily contributed to the diagnosis.
+              </p>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
@@ -625,7 +962,34 @@ const ResultsWithSpecialists: React.FC<ResultsWithSpecialistsProps> = ({
       </div>
 
       {/* Download Buttons */}
-      <div className="mt-8 flex gap-4 flex-col sm:flex-row">
+      <div className="mt-8 flex flex-col gap-6">
+        {/* Duration Warning */}
+        {durationWarning && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-700 rounded-xl p-5 animate-in fade-in slide-in-from-top-4">
+            <div className="flex gap-3 items-start">
+              <div className="text-2xl">⚠️</div>
+              <div className="flex-1">
+                <h3 className="font-bold text-amber-900 dark:text-amber-200 mb-2">Duration Alert</h3>
+                <p className="text-amber-800 dark:text-amber-300 text-sm leading-relaxed">
+                  {durationWarning}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Differential Diagnosis Section */}
+        <DifferentialDiagnosisSection differentialDiagnosis={differentialDiagnosis} />
+
+        {/* Clarifying Questions Section */}
+        <ClarifyingQuestionsSection 
+          confidenceCheck={confidenceCheck}
+          onSubmitAnswers={onSubmitClarifyingAnswers}
+          isLoading={isLoadingClarifyingAnswers}
+        />
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 flex-col sm:flex-row">
         <button
           onClick={downloadPDF}
           className="flex-1 h-14 bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded-2xl transition-all shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-3 active:scale-95"
@@ -654,6 +1018,7 @@ const ResultsWithSpecialists: React.FC<ResultsWithSpecialistsProps> = ({
             Close
           </button>
         )}
+        </div>
       </div>
     </div>
   );

@@ -17,11 +17,14 @@ const SymptomSelector: React.FC<SymptomSelectorProps> = ({ onSubmit, onCancel })
     // Fetch available symptoms from API
     const fetchSymptoms = async () => {
       try {
-        const baseUrl = (import.meta.env as any).VITE_API_BASE_URL || 'http://localhost:8000';
+        const baseUrl = (import.meta.env as any).VITE_API_BASE_URL || 'http://localhost:5000';
         const response = await fetch(`${baseUrl}/symptoms`);
         if (response.ok) {
           const data = await response.json();
           setAllSymptoms(data.symptoms || []);
+        } else {
+          console.error('Failed to fetch symptoms, status:', response.status);
+          setAllSymptoms([]);
         }
       } catch (error) {
         console.error('Failed to fetch symptoms:', error);
